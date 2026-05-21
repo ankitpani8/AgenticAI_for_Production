@@ -4,7 +4,9 @@
       "Bash(python *)",
       "Bash(pip install *)",
       "Bash(pip show *)",
-      "Bash(.venv/Scripts/python.exe -c ' *)"
+      "Bash(.venv/Scripts/python.exe -c ' *)",
+      "Bash(ls venv* .venv*)",
+      "Bash(ls *.cfg pyproject.toml)"
     ]
   }
 }

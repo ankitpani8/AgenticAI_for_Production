@@ -125,3 +125,4 @@ if __name__ == "__main__":
     _indexer.reindex_knowledge_base(verbose=False)
     # asyncio.run(run_eval(_eval.CASES_UNLABELED, _eval.CASES_LABELED))
     asyncio.run(run_eval(_eval.CASES_UNLABELED[:5], _eval.CASES_LABELED[:3]))
+    

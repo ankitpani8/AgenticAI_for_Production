@@ -32,8 +32,8 @@ toolkit with real depth, not buzzword-level familiarity.
 | **4. Memory & RAG** | Persistent state, vector retrieval, context engineering | ✅ Complete  |
 | **5. Production Architecture** | Async, streaming, caching, orchestration patterns | ✅ Complete |
 | **6. Observability & Eval** | Tracing, eval datasets, LLM-as-judge | ✅ Complete |
-| **7. Governance & Guardrails** | Prompt injection, output validation, OWASP LLM Top 10 | 🚧 Ongoing |
-| **8. Deployment & Capstone** | Docker, K8s, end-to-end production agent | ⏳ Planned |
+| **7. Governance & Guardrails** | Prompt injection, output validation, OWASP LLM Top 10 | ✅ Complete |
+| **8. Deployment & Capstone** | Docker, K8s, end-to-end production agent | 🚧 Ongoing |
 
 ---
 
@@ -107,6 +107,14 @@ learning_AgenticAI/
     ├── 03_test_harness.py       -- runs agent over dataset, aggregates scores
     ├── 04_regression_test.py    -- baseline vs degraded-prompt comparison
     ├── 05_ragas_comparison.py   -- RAGAS side-by-side runner
+    └── README.md
+└── module7_governance_guardrails/
+    ├── 01_input_guardrails.py     -- PII redaction + injection detection
+    ├── 02_output_guardrails.py    -- PII leak + topic-scope + keyword fallback
+    ├── 03_tool_guardrails.py      -- allowlist + approval flow + audit log
+    ├── 04_hardened_service.py     -- service with all guardrails wired in
+    ├── 05_red_team_dataset.py     -- 15 adversarial test cases
+    ├── 06_red_team_runner.py      -- before/after attack scoring
     └── README.md
 
 ```
@@ -348,6 +356,29 @@ well they're doing.
 See [`module6_observability_eval/README.md`](module6_observability_eval/README.md)
 for the metrics implementation and findings.
 
+## Module 7 — Governance and Guardrails
+
+**Goal:** Add the defensive layer — input/output/tool guardrails that turn a
+working agent into one safe to put in front of adversarial users.
+
+### What's inside
+- Input guardrails: PII redaction (Presidio), injection detection, length checks
+- Output guardrails: PII leak detection, topic-scope validation with
+  deterministic fallback
+- Tool guardrails: per-role allowlist, high-stakes approval flow, audit log
+- Hardened FastAPI service wiring all three layers around the Module 5 agent
+- 15-case adversarial red-team suite with false-positive checks
+
+### Key concepts demonstrated
+- Defense in depth: layered imperfect defenses, no single point of failure
+- OWASP LLM Top 10 mitigations (injection, disclosure, excessive agency, etc.)
+- LLM-as-judge guardrails inherit the judge's failure modes and availability
+- The accuracy/safety tradeoff and why false positives matter
+- Excessive-agency defense as architectural (allowlists) not promptable
+- Supply-chain risk in production AI tooling
+
+See [`module7_governance_guardrails/README.md`](module7_governance_guardrails/README.md)
+for the architecture and findings.
 
 ## Notes for Visitors
 

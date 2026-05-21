@@ -268,3 +268,64 @@ preserved deliberately for the next person (or future me) to learn from.
   what each metric measures, how the rubrics affect scores, where the
   judge biases live. Production teams modify RAGAS prompts to fit their
   domain. You can only modify what you understand.
+
+- **Is all agent evaluation LLM-as-judge?**
+  No — LLM-as-judge is the hardest branch, used only for natural-language
+  properties like faithfulness and relevance. The full eval landscape splits
+  by output type: tool-call correctness uses exact or schema match (deterministic);
+  trajectory quality uses step counts and sequence matching (deterministic);
+  numerical predictions use standard ML metrics (MAE, F1); side effects use
+  mock-and-assert; output schemas use Pydantic validation. Rule of thumb:
+  use the least-fuzzy method that captures the property. Deterministic first,
+  statistical next, LLM-judge only when nothing else works.
+
+## Module 7 — Governance and Guardrails
+
+- **Why isn't one good guardrail enough?**
+  No single guardrail is reliable. Defense in depth layers multiple imperfect
+  defenses (input filter, tool allowlist, output filter, audit log) so that
+  bypassing all of them is improbable. Any one layer can catch a given attack.
+
+- **Why did my injection classifier flag a normal Python question?**
+  The classifier is itself a small LLM with the same failure modes as any
+  other (substitution, over-eagerness, surface-pattern matching). You can't
+  defend an LLM with another LLM without inheriting its weaknesses. Fix:
+  explicit positive AND negative examples in the classifier prompt. Better
+  fix: combine with deterministic checks.
+
+- **What's the best defense against prompt injection?**
+  There's no perfect defense — LLMs can't reliably separate instructions from
+  data in their context. The strongest mitigation is limiting blast radius:
+  the OWASP "Excessive Agency" defense. If a compromised agent can't call any
+  dangerous tool (allowlist enforced in code), injection becomes a curiosity
+  rather than a vulnerability.
+
+- **What happens to an LLM-based guardrail when the LLM is down?**
+  It inherits the LLM's availability. A fail-open design silently disables the
+  guardrail under load; fail-closed rejects legitimate users during outages.
+  The compromise: a deterministic fallback (keyword denylist) that fires when
+  the LLM judge is unavailable, so the guardrail degrades rather than vanishes.
+
+- **Why did my red-team runner under-report blocked attacks?**
+  It only recognized HTTP 400 (the input-guardrail exception), not 422
+  (Pydantic schema rejection). The guardrail worked; the scorer didn't
+  recognize the win. Security test harnesses must account for every rejection
+  path or they'll under-count defenses.
+
+- **Why are false positives as dangerous as missed attacks?**
+  Guardrails that block legitimate requests get turned off by frustrated
+  users — and then real attacks succeed. The accuracy/safety tradeoff has no
+  perfect setting; you tune against your threat model and false-positive
+  tolerance. Always include legitimate queries in your red-team set to measure
+  the false-positive rate.
+
+- **Why enforce tool permissions in code instead of the prompt?**
+  Prompts are suggestions; code is law. An attacker can convince the LLM to
+  *want* to call any tool, but a code-level allowlist refuses regardless of
+  the LLM's intent. Excessive-agency defense is architectural, not promptable.
+
+- **Why write guardrails by hand instead of using a framework?**
+  Same reason as every other module — understand the primitive first. Plus a
+  real lesson: the widely-cited guardrails-ai library was unavailable on PyPI
+  during this build. Fewer dependencies means fewer points of failure.
+  Framework convenience vs supply-chain control is a real production tradeoff.
