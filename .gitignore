@@ -35,3 +35,37 @@ Thumbs.db
 logs/
 data/local/
 
+
+# ---- Capstone (Module 8) runtime + secrets ----
+capstone_job_agent/backend/providers.json
+capstone_job_agent/backend/profile.json
+capstone_job_agent/backend/results.json
+capstone_job_agent/backend/search_body.json
+capstone_job_agent/backend/tailor_body.json
+capstone_job_agent/backend/dl.json
+capstone_job_agent/backend/*.docx
+capstone_job_agent/backend/*.pdf
+capstone_job_agent/backend/*.zip
+capstone_job_agent/backend/*.sqlite
+capstone_job_agent/backend/*.db
+
+# Backup of Windows requirements
+requirements.txt.win-bak
+
+# ---- Secrets & test artifacts, matched at any depth ----
+providers.json
+profile.json
+results.json
+search.json
+search_req.json
+search_body.json
+tailor_body.json
+tailored.json
+upload.json
+dl.json
+v.json
+raw_dump.txt
+download
+Ankit_*.docx
+Ankit_*.pdf
+Ankit_*.zip
