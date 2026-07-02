@@ -92,7 +92,6 @@ langgraph-checkpoint-sqlite==3.0.3
 langgraph-prebuilt==1.1.0
 langgraph-sdk==0.3.14
 langsmith==0.8.3
--e git+https://github.com/ankitpani8/learning_AgenticAI.git@66c0ad049307ea1021b5bab497be1d40a3a982ea#egg=learning_agentic_ai
 limits==5.8.0
 linkify-it-py==2.1.0
 lxml==6.1.0
