@@ -53,7 +53,7 @@ Anthropic is included in the provider chain at lower priority. To use Claude, se
 ## Repo Structure
 
 ```
-learning_AgenticAI/
+AgenticAI_for_Production/
 ├── .env.example              # Template for required environment variables
 ├── .gitignore
 ├── LICENSE
