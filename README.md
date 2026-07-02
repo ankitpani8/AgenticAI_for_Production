@@ -123,8 +123,8 @@ AgenticAI_for_Production/
 ### Run it yourself
 
 ```bash
-git clone https://github.com/ankitpani8/learning_AgenticAI.git
-cd learning_AgenticAI
+git clone https://github.com/ankitpani8/AgenticAI_for_Production.git
+cd AgenticAI_for_Production
 py -3.11 -m venv .venv
 .venv\Scripts\activate              # Windows
 # source .venv/bin/activate         # macOS/Linux
