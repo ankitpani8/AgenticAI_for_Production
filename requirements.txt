@@ -40,10 +40,6 @@ datasets>=4.8.0,<5.0.0
 # Sentence Transformers for semantic embeddings
 sentence-transformers>=5.4.0,<6.0.0
 
-# torch <2.12.0: 2.12+ has torch._dynamo polyfill regressions on this Python build
-# (verified working: torch==2.11.0 + transformers==5.8.0 + sentence-transformers==5.4.1)
-torch>=2.0.0,<2.12.0
-
 # ChromaDB for vector storage and retrieval
 chromadb>=1.1.0,<2.0.0
 
