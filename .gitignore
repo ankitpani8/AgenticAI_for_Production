@@ -69,3 +69,7 @@ download
 Ankit_*.docx
 Ankit_*.pdf
 Ankit_*.zip
+
+# leftover / local-only — never commit
+.venv-test/
+capstone_job_agent/
