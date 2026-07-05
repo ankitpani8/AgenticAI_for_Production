@@ -1,4 +1,4 @@
-# Learning Agentic AI — From Scratch to Production
+# Learn Agentic AI — From Scratch to Production
 
 > A hands-on, module-by-module journey building production-grade AI agents.
 > Each module pairs a focused tutorial with a working implementation, progressing
@@ -6,7 +6,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Status: In Progress](https://img.shields.io/badge/status-in%20progress-orange.svg)]()
+[![Status: Complete](https://img.shields.io/badge/status-complete-brightgreen.svg)]()
 
 ---
 
@@ -19,6 +19,9 @@ previous module exposed.
 
 **Target audience:** data scientists and engineers who want to add agentic AI to their
 toolkit with real depth, not buzzword-level familiarity.
+
+All eight modules are complete: the curriculum runs end to end, from a raw
+hand-written ReAct loop to a containerized agent deployed on Kubernetes and Cloud Run.
 
 ---
 
@@ -33,7 +36,7 @@ toolkit with real depth, not buzzword-level familiarity.
 | **5. Production Architecture** | Async, streaming, caching, orchestration patterns | ✅ Complete |
 | **6. Observability & Eval** | Tracing, eval datasets, LLM-as-judge | ✅ Complete |
 | **7. Governance & Guardrails** | Prompt injection, output validation, OWASP LLM Top 10 | ✅ Complete |
-| **8. Deployment & Capstone** | Docker, K8s, end-to-end production agent | 🚧 Ongoing |
+| **8. Deployment** | Agent → service → container → Kubernetes → Cloud Run | ✅ Complete |
 
 ---
 
@@ -45,6 +48,8 @@ toolkit with real depth, not buzzword-level familiarity.
 - **Ollama qwen2.5:1.5b** — Local Small LM (free)
 - **httpx** — async-ready HTTP client
 - **python-dotenv** — environment variable management
+- **FastAPI + Uvicorn** — the service shell (Modules 5, 7, 8)
+- **Docker, Kubernetes, Cloud Run** — containerization and deployment (Module 8)
 
 Get a free-tier Gemini API key at [aistudio.google.com](https://aistudio.google.com).
 Download Ollama at: [ollama.com](https://ollama.com/download).
@@ -62,6 +67,7 @@ AgenticAI_for_Production/
     ├── __init__.py           
     └── providers.py
 ├── requirements.txt          # Pinned dependencies
+├── README_PREREQUISITES.md   # System deps (LibreOffice, poppler) for the rendering path
 └── module1_foundations/      # Foundations - building an agent from scratch in Python - without frameworks
     ├── agent_Claude.py
     ├── agent_Gemini_and_Ollama.py
@@ -75,7 +81,7 @@ AgenticAI_for_Production/
     ├── example.txt
     ├── graph.mmd
     └── README.md
-└── module3_multiagent/           # Module 3: Multi-agent frameworks, using :anggraph (mainly) and CrewAI
+└── module3_multiagent/           # Module 3: Multi-agent frameworks, using LangGraph (mainly) and CrewAI
     ├── 01_sequence_plus_critic_loop_CrewAI.py
     ├── 02_sequence_plus_critic_loop_langgraph.py
     ├── 03_hierarchical_langgraph.py
@@ -116,23 +122,128 @@ AgenticAI_for_Production/
     ├── 05_red_team_dataset.py     -- 15 adversarial test cases
     ├── 06_red_team_runner.py      -- before/after attack scoring
     └── README.md
+└── module8_deployment/
+    ├── 01_agent.py                -- self-contained async agent (Module 5 patterns inlined)
+    ├── 02_service.py              -- FastAPI: /health vs /ready, graceful shutdown
+    ├── 03_Dockerfile              -- multi-stage build, non-root, slim runtime
+    ├── 04_dockerignore.txt        -- rename to .dockerignore in the build context
+    ├── 05_docker-compose.yml      -- app + Ollama as the resilience floor
+    ├── 06_k8s/                    -- namespace, configmap, secret, deployment,
+    │                                 service, HPA, ingress
+    ├── 07_deploy_cloudrun.md       -- Cloud Run deploy guide + cost safety
+    ├── LEARNING_LOG.md            -- honest deployment failure modes
+    └── README.md
 
 ```
 ---
 
 ### Run it yourself
 
+The steps are the same everywhere; only virtual-environment activation and the
+system-dependency install differ by OS. Pick your platform below.
+
+**1. Clone and enter the repo** (all platforms)
+
 ```bash
 git clone https://github.com/ankitpani8/AgenticAI_for_Production.git
 cd AgenticAI_for_Production
-py -3.11 -m venv .venv
-.venv\Scripts\activate              # Windows
-# source .venv/bin/activate         # macOS/Linux
-pip install -r requirements.txt
-cp .env.example .env                # then add your GEMINI_API_KEY
-python module1_foundations/agent_Gemini.py #as an example. Run any files by going to the location as per the repo structure
-
 ```
+
+**2. Create and activate a Python 3.11 virtual environment**
+
+<details open>
+<summary><b>Windows (PowerShell)</b></summary>
+
+```powershell
+py -3.11 -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+</details>
+
+<details>
+<summary><b>macOS / Linux (bash/zsh)</b></summary>
+
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate
+```
+</details>
+
+**3. Install Python dependencies** (all platforms)
+
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+**4. Install system prerequisites** (needed for the document-rendering path)
+
+A couple of modules render `.docx` → PDF → images and need two tools that are
+**not** pip-installable: **LibreOffice** (`soffice`) and **poppler-utils**
+(`pdftoppm`).
+
+<details>
+<summary><b>Windows</b></summary>
+
+- **LibreOffice:** download from [libreoffice.org/download](https://www.libreoffice.org/download/)
+  and add `C:\Program Files\LibreOffice\program\` to your PATH.
+- **poppler:** `choco install poppler` (Chocolatey), or download prebuilt binaries
+  from [poppler-windows releases](https://github.com/oschwartz10612/poppler-windows/releases/)
+  and add them to PATH.
+</details>
+
+<details>
+<summary><b>macOS (Homebrew)</b></summary>
+
+```bash
+brew install libreoffice poppler
+```
+</details>
+
+<details>
+<summary><b>Linux (Ubuntu/Debian, incl. WSL)</b></summary>
+
+```bash
+sudo apt-get update && sudo apt-get install -y libreoffice poppler-utils
+```
+</details>
+
+Verify: `soffice --version` and `pdftoppm -v` should both print a version.
+See [`README_PREREQUISITES.md`](README_PREREQUISITES.md) for more detail.
+
+**5. Add your API key** (all platforms)
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and set `GEMINI_API_KEY` (get a free-tier key at
+[aistudio.google.com](https://aistudio.google.com)). Anthropic and OpenAI keys are
+optional — the provider chain runs on Gemini plus local Ollama by default.
+
+**6. (Optional) Install Ollama for the local-model fallback**
+
+Several modules use a local `qwen2.5:1.5b` model as the bottom of the provider
+chain (and for the `critic` role). Install from [ollama.com](https://ollama.com/download),
+then pull the model:
+
+```bash
+ollama pull qwen2.5:1.5b
+```
+
+Skip this if you only want to run against Gemini — the chain falls back gracefully.
+
+**7. Run a module**
+
+Each module runs standalone from its own folder. For example:
+
+```bash
+python module1_foundations/agent_Gemini_and_Ollama.py
+```
+
+Run any file the same way, by pointing at its path in the repo structure above.
+Each module's own `README.md` lists what to run and in what order.
+
 ---
 
 ## Architecture: Role-Based Model Selection
@@ -380,11 +491,68 @@ working agent into one safe to put in front of adversarial users.
 See [`module7_governance_guardrails/README.md`](module7_governance_guardrails/README.md)
 for the architecture and findings.
 
+## Module 8 — Deployment
+
+**Goal:** Take one of the repo's own agents from `python agent.py` to a URL
+other people can call — across a network boundary, inside a container, under an
+orchestrator, on a cloud — and survive the ways each of those can break.
+
+### What's inside
+- A self-contained async agent — Module 5's patterns (telemetry, retry,
+  exact-match cache) inlined, RAG replaced by an inline fact set — so the module
+  runs with no cross-module imports or external state
+- A FastAPI service exposing the liveness/readiness split: `/health`
+  (is the process alive?) vs `/ready` (has a model provider been health-checked
+  and bound?)
+- A multi-stage Dockerfile: fat builder, slim non-root runtime, pinned base,
+  layer-cached dependency install
+- `docker-compose` wiring the app to a local Ollama as a **resilience floor** —
+  the provider chain degrades to a local model when hosted providers fail
+- A complete Kubernetes bundle: namespace, configmap, secret template,
+  deployment with startup/liveness/readiness probes and resource limits, service,
+  HPA, ingress
+- A Cloud Run deploy guide with the scale-to-zero cost model and safety rails
+
+### Key concepts demonstrated
+- Liveness vs readiness, and why pointing both at one endpoint causes restart loops
+- Readiness as the deployment face of the startup health-check protocol from
+  `lib/providers.py` — "ready" means a model in the role's chain answered and bound
+- Multi-stage builds, non-root containers, and keeping secrets out of image layers
+- The resilience floor is environment-dependent — local Ollama where you control
+  the host, a cheap hosted model where you don't (Cloud Run)
+- Scale-to-zero economics: pay per request, cap max-instances, keep min-instances
+  at zero
+- Why serverless often wins for bursty agent traffic
+
+The honest failure modes — restart loops from probe misconfiguration, the startup
+health-check fighting cold starts, `min-instances > 0` as a silent bill,
+autoscaling that scales for attackers too — are in
+[`module8_deployment/LEARNING_LOG.md`](module8_deployment/LEARNING_LOG.md).
+
+This module closes the arc: across eight modules the repo goes from a
+hand-written ReAct loop to a deployed, observable, guarded, self-healing agent.
+
+See [`module8_deployment/README.md`](module8_deployment/README.md) for the full
+walkthrough.
+
+---
+
+## From patterns to product
+
+These eight modules are the foundation for a real application built on the same
+principles — **[Chakiri](https://github.com/ankitpani8/chakiri-web)**, an agentic
+résumé-tailoring and job-search system (*chakiri* is the Odia word for "job"). It
+puts the repo's lessons to work: role-based model routing, deterministic guarantees
+around LLM judgment, honest-gaps-over-fabrication, and the deploy patterns from
+Module 8. The public landing page and progress live at
+[github.com/ankitpani8/chakiri-web](https://github.com/ankitpani8/chakiri-web).
+
 ## Notes for Visitors
 
-This is an active learning project. Each module is tagged on GitHub
-(e.g., `v0.1.0-module1`) — browse the [Releases](../../releases) page to see
-milestone-by-milestone progress with summaries.
+This repo is complete — all eight modules are built, tested, and documented.
+Each module is tagged on GitHub (e.g., `v0.1.0-module1`) — browse the
+[Releases](../../releases) page to see milestone-by-milestone progress with
+summaries.
 
 I'm documenting findings publicly because most production lessons in agentic AI
 aren't in the docs — they're in the failure modes. This repo captures both.
@@ -401,6 +569,3 @@ aren't in the docs — they're in the failure modes. This repo captures both.
 ## License
 
 MIT — see [LICENSE](LICENSE).
-
-
-
