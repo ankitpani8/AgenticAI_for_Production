@@ -1,0 +1,8 @@
+# A namespace isolates this app's objects from everything else in the cluster.
+# All other manifests in this folder set `namespace: agentic` so they land here.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agentic
+  labels:
+    app: agentic-deploy

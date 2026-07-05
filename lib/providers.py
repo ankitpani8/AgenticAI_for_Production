@@ -124,7 +124,7 @@ class ModelSelection:
         if self.provider == "ollama":
             return LLM(
                 model=f"ollama/{self.name}",
-                base_url="http://localhost:11434",
+                base_url=f"http://{os.environ.get('OLLAMA_HOST', 'localhost:11434')}",
                 temperature=temperature,
             )
         if self.provider == "anthropic":

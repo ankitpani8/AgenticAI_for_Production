@@ -1,0 +1,24 @@
+# The HorizontalPodAutoscaler adds/removes pods based on load. It reads the
+# CPU the pods actually use against the `requests.cpu` from the Deployment, so
+# those requests must be set (they are) for the HPA to compute a percentage.
+#
+# Requires the metrics-server to be installed in the cluster (standard on GKE).
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: agentic-deploy
+  namespace: agentic
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: agentic-deploy
+  minReplicas: 2                 # never below 2 (availability floor)
+  maxReplicas: 10                # cost ceiling: never more than 10 pods
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70   # add pods when avg CPU > 70% of requests

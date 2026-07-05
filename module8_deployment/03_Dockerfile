@@ -1,0 +1,59 @@
+# Module 8 — multi-stage Dockerfile.
+#
+# Two stages: a fat "builder" that compiles/installs dependencies, and a slim
+# "runtime" that copies ONLY the installed packages and app code. The runtime
+# image never contains compilers, build caches, or your source control -- it is
+# smaller (faster pulls, less attack surface) and cleaner.
+#
+# Key production choices, each with a reason:
+#   - pinned base image (python:3.11-slim, not :latest) -> reproducible builds
+#   - install deps in their OWN layer, before copying code -> layer cache reuse
+#     (code changes don't reinvalidate the dependency install)
+#   - non-root user -> a compromised process can't own the container
+#   - $PORT from env, default 8080 -> Cloud Run injects $PORT; we honor it
+#   - HEALTHCHECK -> local `docker` liveness; K8s/Cloud Run use their own probes
+#
+# Build:  docker build -f 03_Dockerfile -t agentic-deploy:local .
+# Run:    docker run -p 8080:8080 --env-file .env agentic-deploy:local
+
+# ---- Stage 1: builder -------------------------------------------------------
+FROM python:3.11-slim AS builder
+
+# Create an isolated venv we can copy wholesale into the runtime stage.
+ENV VIRTUAL_ENV=/opt/venv
+RUN python -m venv "$VIRTUAL_ENV"
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+WORKDIR /build
+
+# Install dependencies FIRST, in their own layer. As long as requirements.txt
+# is unchanged, Docker reuses this cached layer even when your code changes.
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
+
+# ---- Stage 2: runtime -------------------------------------------------------
+FROM python:3.11-slim AS runtime
+
+# Copy the ready-built venv from the builder. No pip/compilers in this image.
+ENV VIRTUAL_ENV=/opt/venv
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Run as a non-root user. Create it, own the app dir, drop to it.
+RUN useradd --create-home --uid 10001 appuser
+WORKDIR /app
+COPY --chown=appuser:appuser . /app
+USER appuser
+
+# The platform tells us the port; default to 8080 for local runs.
+ENV PORT=8080
+EXPOSE 8080
+
+# Container-level liveness for `docker`/compose. Orchestrators override this
+# with their own HTTP probes (see 06_k8s/03_deployment.yaml).
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD python -c "import os,urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.environ.get(\"PORT\",\"8080\")}/health')" || exit 1
+
+# Start the service. Uvicorn binds 0.0.0.0 inside 02_service.py.
+CMD ["python", "02_service.py"]

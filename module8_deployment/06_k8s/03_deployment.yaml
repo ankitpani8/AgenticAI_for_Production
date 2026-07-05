@@ -1,0 +1,77 @@
+# The Deployment: how many copies of the app to run, from which image, wired
+# to config + secrets, with the probes an orchestrator uses to keep it healthy.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agentic-deploy
+  namespace: agentic
+  labels:
+    app: agentic-deploy
+spec:
+  replicas: 2                      # two pods -> survives one pod/node dying
+  selector:
+    matchLabels:
+      app: agentic-deploy
+  template:
+    metadata:
+      labels:
+        app: agentic-deploy
+    spec:
+      # Run as non-root at the pod level too (defense in depth with the image).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: app
+          # Replace with your pushed image, e.g. a registry path + tag.
+          image: agentic-deploy:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          # Inject config (non-secret) and secrets (keys) as env vars.
+          envFrom:
+            - configMapRef:
+                name: agentic-config
+            - secretRef:
+                name: agentic-secrets
+
+          # --- probes: the whole point of /health vs /ready ---
+
+          # STARTUP probe: gives a slow-starting app time to bind a model
+          # WITHOUT the liveness probe killing it during warm-up. Liveness and
+          # readiness don't run until this passes.
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            failureThreshold: 30      # 30 * 5s = up to 150s to start
+            periodSeconds: 5
+
+          # LIVENESS: is the process wedged? If this fails, RESTART the pod.
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # READINESS: can it serve NOW (model bound)? If this fails, keep the
+          # pod but route NO traffic to it. This is /ready returning 503 until a
+          # provider binds. Restarting wouldn't help; waiting does.
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # --- resources: requests drive scheduling + HPA; limits cap usage ---
+          resources:
+            requests:
+              cpu: "250m"           # 0.25 vCPU guaranteed; HPA scales on this
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"          # burst up to 1 vCPU
+              memory: "512Mi"       # OOM-killed above this -> keep it realistic

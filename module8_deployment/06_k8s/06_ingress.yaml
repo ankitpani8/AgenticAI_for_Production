@@ -1,0 +1,40 @@
+# The Ingress exposes the internal Service to the outside world at a hostname
+# and path, and is where you'd terminate TLS.
+#
+# CONTROLLER CHOICE — why nginx-ingress here:
+#   nginx-ingress is the most PORTABLE option: it runs the same on a laptop
+#   (kind/minikube/k3s), on GKE/EKS/AKS, and on-prem. That portability is why
+#   it's the default for a teaching repo you might reuse anywhere.
+#
+#   To use a cloud-managed controller instead, change `ingressClassName` and
+#   swap the annotations:
+#     - GKE:  ingressClassName: "gce"      (GCE L7 load balancer)
+#     - AWS:  ingressClassName: "alb"      (AWS Load Balancer Controller)
+#   The rules block below stays the same.
+#
+# Prereq for this file as written: install the ingress-nginx controller, e.g.
+#   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: agentic-deploy
+  namespace: agentic
+  annotations:
+    # nginx-specific: don't rewrite the path we forward upstream.
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: agentic.example.com     # replace with your real hostname / DNS
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: agentic-deploy
+                port:
+                  number: 80        # the Service port from 04_service.yaml
+  # For TLS, add a `tls:` block referencing a Secret with your cert, or use
+  # cert-manager to issue one automatically. Omitted here to keep the example
+  # applyable without a cert on hand.

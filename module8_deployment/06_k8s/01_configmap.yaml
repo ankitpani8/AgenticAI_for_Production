@@ -1,0 +1,14 @@
+# ConfigMap = NON-secret configuration, injected as environment variables.
+# 12-factor: config lives outside the image, so the same image runs in dev,
+# staging, and prod with different config. Secrets go in the Secret, NOT here.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agentic-config
+  namespace: agentic
+data:
+  PORT: "8080"
+  # In-cluster the Ollama fallback is a Service DNS name, not localhost.
+  # (See 05_docker-compose.yml note: providers.py should read OLLAMA_HOST.)
+  OLLAMA_HOST: "http://ollama:11434"
+  LOG_LEVEL: "INFO"

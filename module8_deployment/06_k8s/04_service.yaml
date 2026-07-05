@@ -1,0 +1,18 @@
+# A Service gives the pods one stable in-cluster DNS name + IP. Pods come and
+# go (restarts, scaling); the Service is the durable address other things call.
+# ClusterIP = internal-only; the Ingress (06_ingress.yaml) exposes it publicly.
+apiVersion: v1
+kind: Service
+metadata:
+  name: agentic-deploy
+  namespace: agentic
+  labels:
+    app: agentic-deploy
+spec:
+  type: ClusterIP
+  selector:
+    app: agentic-deploy          # routes to pods with this label
+  ports:
+    - name: http
+      port: 80                   # Service port (what callers hit)
+      targetPort: 8080           # container port (where the app listens)

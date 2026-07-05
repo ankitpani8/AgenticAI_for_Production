@@ -1,0 +1,48 @@
+# Module 8 — .dockerignore
+#
+# Rename this file to `.dockerignore` in your build context root:
+#     cp 04_dockerignore.txt .dockerignore
+#
+# It's kept here as .txt so it stays VISIBLE in the repo listing (dotfiles hide)
+# and so a reader sees it exists at all -- a forgotten .dockerignore is one of
+# the most common ways secrets and multi-hundred-MB junk end up baked into an
+# image. Everything matched here is EXCLUDED from the build context, so it can
+# never reach a layer.
+
+# --- secrets: the most important lines in this file ---
+.env
+.env.*
+*.pem
+*.key
+secret*.yaml
+
+# --- python cruft ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- virtualenvs (deps are installed fresh in the image) ---
+.venv/
+.venv-test/
+venv/
+env/
+
+# --- vcs / editor / os ---
+.git/
+.gitignore
+.vscode/
+.idea/
+.DS_Store
+
+# --- local state that must not ship ---
+cache_db/
+*.log
+*.sqlite
+*.db
+
+# --- docs/tests not needed at runtime (optional; keep if you run tests in-image) ---
+*.md
+LEARNING_LOG.md

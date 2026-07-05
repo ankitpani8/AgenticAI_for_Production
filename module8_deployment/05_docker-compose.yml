@@ -1,0 +1,72 @@
+# Module 8 — local orchestration with docker-compose.
+#
+# Two services on one network:
+#   app     -- our agent service (the image built from 03_Dockerfile)
+#   ollama  -- a LOCAL model server that is the RESILIENCE FLOOR
+#
+# Why Ollama here? The provider chain in lib/providers.py falls back, in order,
+# to a local Ollama model (qwen2.5:1.5b) when hosted providers fail. Wiring
+# Ollama into the compose network means the app keeps answering even if every
+# hosted provider is down, rate-limited, or UNPAID. An expired invoice should
+# not take the service offline. That is a real availability property, not a dev
+# convenience.
+#
+# IMPORTANT caveat (see README + LEARNING_LOG): this floor holds only where you
+# control a host with enough RAM to run the model. It works here and on a K8s
+# node sized for it. It does NOT translate to Cloud Run's cheap scale-to-zero
+# container -- there the floor is a cheap HOSTED small model instead.
+#
+# Note: lib/providers.py points Ollama at localhost:11434. Inside compose the
+# host is `ollama`, not localhost. Set OLLAMA_HOST accordingly (the app should
+# read it; if your providers.py hardcodes localhost, that's a one-line change
+# to make it env-driven -- called out in the README).
+#
+# Up:   docker compose -f 05_docker-compose.yml up --build
+# Down: docker compose -f 05_docker-compose.yml down
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: 03_Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      # Point the app's Ollama fallback at the compose service, not localhost.
+      OLLAMA_HOST: "http://ollama:11434"
+      # Hosted provider keys come from a local .env (never committed).
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      # Compose-level readiness: only mark app healthy once /ready passes.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/ready')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      # Persist pulled models so you don't re-download on every `up`.
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  ollama_models:
+
+# First run only: pull the fallback model into the ollama service, e.g.
+#   docker compose -f 05_docker-compose.yml exec ollama ollama pull qwen2.5:1.5b
